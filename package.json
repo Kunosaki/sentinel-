@@ -20,6 +20,7 @@
       "renderer/**/*",
       "scanner.py",
       "scan_cli.py",
+      "malware_hashes.json",
       "node_modules/**/*",
       "!node_modules/electron/dist"
     ],

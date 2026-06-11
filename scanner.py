@@ -1,7 +1,4 @@
-import os
-import re
-import hashlib
-import math
+import os, re, hashlib, math, json
 from pathlib import Path
 from dataclasses import dataclass, field
 from enum import Enum
@@ -104,7 +101,18 @@ YARA_RULES = [
     },
 ]
 
-KNOWN_MALWARE_HASHES = set()
+def load_malware_hashes(path=None):
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__), "malware_hashes.json")
+    try:
+        with open(path) as f:
+            db = json.load(f)
+        return db["hashes"], db.get("families", 0)
+    except Exception:
+        return {}, 0
+
+
+MALWARE_HASH_DB, KNOWN_MALWARE_FAMILIES = load_malware_hashes()
 
 
 class ScannerEngine:
@@ -134,11 +142,12 @@ class ScannerEngine:
         return result
 
     def _check_hash(self, result: ScanResult):
-        if result.md5 in KNOWN_MALWARE_HASHES or result.sha1 in KNOWN_MALWARE_HASHES:
+        family = MALWARE_HASH_DB.get(result.sha256) or MALWARE_HASH_DB.get(result.md5)
+        if family:
             result.findings.append(Finding(
                 engine="Hash Lookup", severity=Severity.CRITICAL,
-                title="Known malware hash match",
-                description=f"File hash matches known malicious sample"
+                title=f"Known malware: {family}",
+                description=f"SHA256 matches known {family} sample"
             ))
 
     def _check_yara_patterns(self, data: bytes, result: ScanResult):
