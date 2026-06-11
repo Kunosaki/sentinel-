@@ -9,9 +9,10 @@ let mainWindow;
 const QUARANTINE_DIR = path.join(os.homedir(), 'SentinelQuarantine');
 
 function createWindow() {
+  const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
     width: 960, height: 680,
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
     backgroundColor: '#f5f5f7',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -38,29 +39,43 @@ function scanFiles(filePaths) {
     const proc = spawn('python', [scannerPath, ...filePaths]);
 
     const results = [];
+    let buffer = '';
+    let doneSent = false;
 
     proc.stdout.on('data', (data) => {
-      const lines = data.toString().split('\n').filter(l => l.trim());
+      buffer += data.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
       for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
         try {
-          const obj = JSON.parse(line);
+          const obj = JSON.parse(trimmed);
           if (obj.type === 'result') {
             results.push(obj);
             send('scan-result', obj);
           } else if (obj.type === 'progress') {
             send('scan-progress', obj);
-          } else if (obj.type === 'done') {
-            send('scan-done', { total: results.length });
           }
         } catch {}
       }
     });
 
     proc.stderr.on('data', (data) => {
-      send('scan-error', data.toString());
+      send('scan-error', { type: 'error', message: data.toString().trim() });
     });
 
     proc.on('close', (code) => {
+      if (buffer.trim()) {
+        try {
+          const obj = JSON.parse(buffer.trim());
+          if (obj.type === 'result') results.push(obj);
+        } catch {}
+      }
+      if (!doneSent) {
+        doneSent = true;
+        send('scan-done', { total: results.length });
+      }
       if (code !== 0 && results.length === 0) {
         reject(new Error('Scanner failed'));
       } else {
@@ -68,7 +83,10 @@ function scanFiles(filePaths) {
       }
     });
 
-    proc.on('error', reject);
+    proc.on('error', (err) => {
+      send('scan-error', { type: 'error', message: err.message });
+      reject(err);
+    });
   });
 }
 
@@ -128,12 +146,7 @@ ipcMain.handle('quarantine-file', async (_, filePath) => {
     fs.renameSync(filePath, finalDest);
     return { success: true, quarantinedPath: finalDest };
   } catch (e) {
-    try {
-      fs.unlinkSync(filePath);
-      return { success: true, quarantinedPath: null, note: 'Deleted instead' };
-    } catch {
-      return { success: false, error: e.message };
-    }
+    return { success: false, error: e.message };
   }
 });
 

@@ -76,8 +76,8 @@ window.sentinel.onScanProgress((data) => {
     setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
     updateStats();
     checkDangerFiles(scanResults);
-  } else if (data.type === 'scan-error') {
-    progressText.textContent = 'Error: ' + data.substring(0, 60);
+  } else if (data.type === 'error') {
+    progressText.textContent = 'Error: ' + (data.message || 'Unknown error').substring(0, 60);
   }
 });
 
@@ -100,11 +100,14 @@ async function startScan(paths) {
   statDanger.textContent = '0';
 
   const result = await window.sentinel.scanFiles(paths);
-  if (!result.success) {
+  if (result.success) {
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Scan complete';
+  } else {
     resultsList.innerHTML = `<div class="empty-state"><p>Scan failed: ${result.error}</p></div>`;
     progressContainer.style.display = 'none';
-    isScanning = false;
   }
+  isScanning = false;
 }
 
 async function startFullScan() {
@@ -124,8 +127,8 @@ async function startFullScan() {
   if (!result.success) {
     resultsList.innerHTML = `<div class="empty-state"><p>Full scan failed: ${result.error}</p></div>`;
     progressContainer.style.display = 'none';
-    isScanning = false;
   }
+  isScanning = false;
 }
 
 function addResultItem(r) {
