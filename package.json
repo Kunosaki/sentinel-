@@ -1,12 +1,13 @@
 {
   "name": "sentinel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Apple-inspired virus scanner — full system scan, quarantine, and wipe",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "build:win": "electron-builder --win"
+    "build:portable": "electron-builder --win portable",
+    "pack": "electron-packager . Sentinel --platform=win32 --arch=x64 --out=release --prune --overwrite"
   },
   "build": {
     "appId": "com.sentinel.antivirus",
@@ -31,18 +32,11 @@
     "win": {
       "target": [
         {
-          "target": "nsis",
+          "target": "portable",
           "arch": ["x64"]
         }
       ],
-      "icon": null,
-      "artifactName": "Sentinel-Setup-${version}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "shortcutName": "Sentinel"
+      "artifactName": "Sentinel-${version}.${ext}"
     },
     "asarUnpack": [
       "scanner.py",
@@ -51,6 +45,7 @@
   },
   "devDependencies": {
     "electron": "^42.4.0",
-    "electron-builder": "^25.0.0"
+    "electron-builder": "^25.0.0",
+    "@electron/packager": "^18.3.0"
   }
 }
