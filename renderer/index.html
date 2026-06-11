@@ -26,7 +26,10 @@
   </div>
 
   <div class="toolbar">
-    <button class="tool-btn" id="tabScan">Scan</button>
+    <button class="tool-btn active" id="tabScan">Scan</button>
+    <button class="tool-btn" id="tabProcesses">Processes</button>
+    <button class="tool-btn" id="tabStartup">Startup</button>
+    <button class="tool-btn" id="tabMonitor">Monitor</button>
     <button class="tool-btn" id="tabQuarantine">Quarantine</button>
   </div>
 
@@ -63,6 +66,76 @@
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
             <p>Drop files or click Full Scan to start</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="processesView" style="display:none">
+      <div class="results-panel">
+        <div class="stats-bar">
+          <div class="stat"><span class="stat-num" id="procTotal">0</span><span class="stat-label">Processes</span></div>
+          <div class="stat safe"><span class="stat-num" id="procSafe">0</span><span class="stat-label">Safe</span></div>
+          <div class="stat warn"><span class="stat-num" id="procWarn">0</span><span class="stat-label">Suspicious</span></div>
+          <div class="stat danger"><span class="stat-num" id="procDanger">0</span><span class="stat-label">Dangerous</span></div>
+        </div>
+        <div class="scan-actions">
+          <button class="browse-btn" id="scanProcessesBtn">🔍 Scan Running Processes</button>
+        </div>
+        <div class="progress-container" id="procProgress" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="procProgressFill"></div></div>
+          <span class="progress-text" id="procProgressText">Scanning...</span>
+        </div>
+        <div class="results-list" id="procResultsList">
+          <div class="empty-state"><p>Scan running processes for known malware</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="startupView" style="display:none">
+      <div class="results-panel">
+        <div class="stats-bar">
+          <div class="stat"><span class="stat-num" id="startupTotal">0</span><span class="stat-label">Entries</span></div>
+          <div class="stat safe"><span class="stat-num" id="startupSafe">0</span><span class="stat-label">Safe</span></div>
+          <div class="stat warn"><span class="stat-num" id="startupWarn">0</span><span class="stat-label">Suspicious</span></div>
+          <div class="stat danger"><span class="stat-num" id="startupDanger">0</span><span class="stat-label">Dangerous</span></div>
+        </div>
+        <div class="scan-actions">
+          <button class="browse-btn" id="scanStartupBtn">🔍 Scan Startup Entries</button>
+        </div>
+        <div class="progress-container" id="startupProgress" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="startupProgressFill"></div></div>
+          <span class="progress-text" id="startupProgressText">Scanning...</span>
+        </div>
+        <div class="results-list" id="startupResultsList">
+          <div class="empty-state"><p>Scan startup entries for known malware</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="monitorView" style="display:none">
+      <div class="results-panel">
+        <div class="stats-bar">
+          <div class="stat"><span class="stat-num" id="monProcCount">0</span><span class="stat-label">Processes</span></div>
+          <div class="stat"><span class="stat-num" id="monConnCount">0</span><span class="stat-label">Connections</span></div>
+          <div class="stat warn"><span class="stat-num" id="monChanges">0</span><span class="stat-label">Changes</span></div>
+        </div>
+        <div class="scan-actions">
+          <button class="browse-btn" id="monitorToggleBtn">▶ Start Monitor</button>
+        </div>
+        <div class="monitor-status" id="monitorStatus">Click "Start Monitor" to begin live monitoring</div>
+        <div class="monitor-split">
+          <div class="monitor-panel">
+            <div class="monitor-panel-header">Running Processes</div>
+            <div class="monitor-list" id="monitorProcessList">
+              <div class="empty-state"><p>Start monitor to see processes</p></div>
+            </div>
+          </div>
+          <div class="monitor-panel">
+            <div class="monitor-panel-header">Activity Log</div>
+            <div class="monitor-list" id="monitorLogList">
+              <div class="empty-state"><p>Start monitor to see activity</p></div>
+            </div>
           </div>
         </div>
       </div>

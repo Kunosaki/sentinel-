@@ -156,6 +156,10 @@ body {
 
 .fullscan-btn:hover { opacity: 0.85; background: var(--danger); }
 
+.scan-actions {
+  display: flex; gap: 8px; flex-shrink: 0; margin-bottom: 4px;
+}
+
 .results-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 
 .stats-bar {
@@ -260,3 +264,42 @@ body {
 .q-btn.restore:hover { background: var(--safe); color: white; }
 .q-btn.delete { background: rgba(255,69,58,0.15); color: var(--danger); }
 .q-btn.delete:hover { background: var(--danger); color: white; }
+
+/* === LIVE MONITOR === */
+.monitor-status {
+  padding: 10px 14px; border-radius: 10px; text-align: center;
+  font-size: 12px; background: var(--surface);
+  border: 1px solid var(--border); margin: 8px 0;
+}
+.monitor-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; min-height: 0; }
+.monitor-panel { display: flex; flex-direction: column; min-height: 0; }
+.monitor-panel-header {
+  font-size: 12px; font-weight: 600; padding: 8px 0 6px;
+  color: var(--text-secondary); flex-shrink: 0;
+}
+.monitor-list {
+  display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto; flex: 1; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface); padding: 4px;
+}
+.mon-proc-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px;
+  font-size: 11px; cursor: default;
+}
+.mon-proc-item:hover { background: var(--surface-hover); }
+.mon-proc-icon { flex-shrink: 0; font-size: 14px; }
+.mon-proc-info { flex: 1; min-width: 0; }
+.mon-proc-name { font-weight: 500; font-size: 11px; }
+.mon-proc-meta { font-size: 10px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mon-proc-mem { font-size: 10px; color: var(--text-secondary); flex-shrink: 0; }
+.mon-log-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 8px; border-radius: 4px;
+  font-size: 10px; border-left: 2px solid var(--border);
+}
+.mon-log-item.log-new { border-left-color: var(--safe); }
+.mon-log-item.log-end { border-left-color: var(--danger); }
+.mon-log-item.log-file { border-left-color: var(--warn); }
+.mon-log-time { color: var(--text-secondary); flex-shrink: 0; font-family: monospace; }
+.mon-log-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

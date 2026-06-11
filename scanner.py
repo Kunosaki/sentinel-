@@ -99,6 +99,60 @@ YARA_RULES = [
         "severity": Severity.HIGH,
         "description": "VBA auto-executing macro detected"
     },
+    {
+        "name": "Anti-debug NtGlobalFlag",
+        "pattern": re.compile(rb"NtGlobalFlag|BeingDebugged|CheckRemoteDebugger", re.I),
+        "severity": Severity.MEDIUM,
+        "description": "Anti-debugging API references detected"
+    },
+    {
+        "name": "Process hollowing indicators",
+        "pattern": re.compile(rb"(CreateProcessInternal|ZwUnmapViewOfSection|SetThreadContext|ResumeThread)", re.I),
+        "severity": Severity.HIGH,
+        "description": "APIs commonly used for process hollowing"
+    },
+    {
+        "name": "DLL injection APIs",
+        "pattern": re.compile(rb"(CreateRemoteThread|WriteProcessMemory|VirtualAllocEx|NtCreateThreadEx)", re.I),
+        "severity": Severity.HIGH,
+        "description": "APIs commonly used for DLL injection"
+    },
+    {
+        "name": "Keylogging APIs",
+        "pattern": re.compile(rb"(SetWindowsHookEx|GetAsyncKeyState|GetForegroundWindow|GetKeyState)", re.I),
+        "severity": Severity.MEDIUM,
+        "description": "APIs commonly used for keylogging"
+    },
+    {
+        "name": "Persistence via Registry",
+        "pattern": re.compile(rb"(CurrentVersion\\Run|CurrentVersion\\RunOnce|CurrentVersion\\RunServices)", re.I),
+        "severity": Severity.MEDIUM,
+        "description": "References to auto-start registry keys"
+    },
+    {
+        "name": "Screen capture API",
+        "pattern": re.compile(rb"(GetDC|CreateCompatibleBitmap|BitBlt|ScreenToClient|capture|screenshot)", re.I),
+        "severity": Severity.MEDIUM,
+        "description": "Potential screen capture functionality"
+    },
+    {
+        "name": "Disable Windows Defender",
+        "pattern": re.compile(rb"(DisableAntiSpyware|DisableRealtimeMonitoring|DisableBehaviorMonitoring)", re.I),
+        "severity": Severity.CRITICAL,
+        "description": "Attempts to disable Windows security features"
+    },
+    {
+        "name": "Ransomware extension pattern",
+        "pattern": re.compile(rb"\.(encrypted|locked|encrypt|ransom|crypt|enc)\b", re.I),
+        "severity": Severity.CRITICAL,
+        "description": "File extension matches known ransomware patterns"
+    },
+    {
+        "name": "C2 beaconing indicator",
+        "pattern": re.compile(rb"(https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5}|command.*control|C2\s+server)", re.I),
+        "severity": Severity.HIGH,
+        "description": "Potential command & control communication"
+    },
 ]
 
 def load_malware_hashes(path=None):
@@ -310,6 +364,44 @@ class ScannerEngine:
                 engine="Heuristic", severity=Severity.LOW,
                 title=f"Suspicious URLs ({len(suspicious_urls)})",
                 description=suspicious_urls[0][:120].decode("latin-1", errors="replace")
+            ))
+
+        # Check for obfuscated script patterns
+        if ext in (".ps1", ".vbs", ".bat", ".cmd", ".js"):
+            lines = data.split(b"\n")
+            long_lines = sum(1 for l in lines if len(l) > 500)
+            if long_lines > 3 and len(lines) > 5:
+                result.findings.append(Finding(
+                    engine="Heuristic", severity=Severity.MEDIUM,
+                    title=f"Obfuscated script ({long_lines} lines >500 chars)",
+                    description="Script contains unusually long lines typical of obfuscation"
+                ))
+
+        # Check for environment variable manipulation
+        if b"%PATH%" in data or b"%TEMP%" in data or b"%APPDATA%" in data:
+            env_refs = sum(1 for p in [b"%PATH%", b"%TEMP%", b"%APPDATA%", b"%USERPROFILE%", b"%LOCALAPPDATA%"] if p in data)
+            if env_refs >= 3:
+                result.findings.append(Finding(
+                    engine="Heuristic", severity=Severity.LOW,
+                    title=f"Environment variable references ({env_refs})",
+                    description="Multiple environment variable references — common in droppers"
+                ))
+
+        # Check for Tor/i2p references
+        if b".onion" in data or b".i2p" in data:
+            result.findings.append(Finding(
+                engine="Heuristic", severity=Severity.HIGH,
+                title="Darknet (.onion/.i2p) reference",
+                description="File contains references to Tor or I2P hidden services"
+            ))
+
+        # Check for encoded PowerShell commands in any file
+        ps_encoded = re.findall(rb"powershell\s+-[ecn]\s+([A-Za-z0-9+/]{50,})", data, re.I)
+        if ps_encoded:
+            result.findings.append(Finding(
+                engine="Heuristic", severity=Severity.HIGH,
+                title="Encoded PowerShell in file",
+                description=f"Found {len(ps_encoded)} encoded PowerShell command(s)"
             ))
 
 
