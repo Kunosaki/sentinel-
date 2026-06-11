@@ -37,10 +37,29 @@ function send(channel, data) {
   }
 }
 
+function getResourcePath(file) {
+  return app.isPackaged ? path.join(process.resourcesPath, file) : path.join(__dirname, file);
+}
+
+function getPythonCmd() {
+  try { execSync('python --version', { timeout: 1000 }); return 'python'; }
+  catch { try { execSync('python3 --version', { timeout: 1000 }); return 'python3'; }
+  catch { return null; } }
+}
+
 function scanFiles(filePaths) {
   return new Promise((resolve, reject) => {
-    const scannerPath = path.join(__dirname, 'scan_cli.py');
-    const proc = spawn('python', [scannerPath, ...filePaths]);
+    const scannerPath = getResourcePath('scan_cli.py');
+    if (!fs.existsSync(scannerPath)) {
+      reject(new Error('Scanner not found at ' + scannerPath));
+      return;
+    }
+    const pythonCmd = getPythonCmd();
+    if (!pythonCmd) {
+      reject(new Error('Python is not installed or not in PATH'));
+      return;
+    }
+    const proc = spawn(pythonCmd, [scannerPath, ...filePaths]);
 
     const results = [];
     let buffer = '';

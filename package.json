@@ -27,7 +27,8 @@
     ],
     "extraResources": [
       "scanner.py",
-      "scan_cli.py"
+      "scan_cli.py",
+      "malware_hashes.json"
     ],
     "win": {
       "target": [
