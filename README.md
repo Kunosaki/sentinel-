@@ -26,18 +26,18 @@ Sentinel uses a Python-based scanning engine that detects:
 
 ## Download
 
-Grab the latest installer from [Releases](https://github.com/yourusername/sentinel/releases).
+Grab the latest portable build from [Releases](https://github.com/Kunosaki/sentinel-/releases).
 
 ## Build from source
 
 ```bash
-git clone https://github.com/yourusername/sentinel.git
-cd sentinel
+git clone https://github.com/Kunosaki/sentinel-.git
+cd sentinel-
 npm install
 npm run build:win
 ```
 
-The installer will be in `dist/Sentinel-Setup-1.0.0.exe`.
+The portable build will be in `release/Sentinel-win32-x64/Sentinel.exe`.
 
 ## Requirements
 
