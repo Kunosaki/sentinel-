@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Sentinel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="titlebar">
+    <div class="traffic-lights">
+      <span class="dot close"></span>
+      <span class="dot minimize"></span>
+      <span class="dot maximize"></span>
+    </div>
+    <span class="title">Sentinel</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+      <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <button class="tool-btn" id="tabScan">Scan</button>
+    <button class="tool-btn" id="tabQuarantine">Quarantine</button>
+  </div>
+
+  <div class="container">
+    <div id="scanView">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-content">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="drop-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="drop-text">Drop files here to scan</p>
+          <p class="drop-sub">or click to browse</p>
+          <button class="browse-btn" id="browseBtn">Select Files</button>
+          <button class="browse-btn fullscan-btn" id="fullScanBtn">Scan Entire Computer</button>
+        </div>
+      </div>
+
+      <div class="results-panel">
+        <div class="stats-bar">
+          <div class="stat"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Scanned</span></div>
+          <div class="stat safe"><span class="stat-num" id="statSafe">0</span><span class="stat-label">Safe</span></div>
+          <div class="stat warn"><span class="stat-num" id="statWarn">0</span><span class="stat-label">Suspicious</span></div>
+          <div class="stat danger"><span class="stat-num" id="statDanger">0</span><span class="stat-label">Dangerous</span></div>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <span class="progress-text" id="progressText">Starting...</span>
+        </div>
+
+        <div class="results-list" id="resultsList">
+          <div class="empty-state">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <p>Drop files or click Full Scan to start</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="quarantineView" style="display:none">
+      <div class="results-panel">
+        <div class="stats-bar">
+          <div class="stat"><span class="stat-num" id="qCount">0</span><span class="stat-label">Quarantined</span></div>
+          <div class="stat danger"><span class="stat-num" id="qSize">0</span><span class="stat-label">Total Size</span></div>
+        </div>
+        <div class="results-list" id="quarantineList">
+          <div class="empty-state"><p>No files in quarantine</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="dangerModal">
+      <div class="modal-header">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff453a" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <h2>This file may be dangerous</h2>
+      </div>
+      <div class="modal-body">
+        <p class="modal-filename" id="modalFilename"></p>
+        <div class="modal-findings" id="modalFindings"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" id="modalIgnore">Ignore</button>
+        <button class="modal-btn primary" id="modalTrash">Quarantine</button>
+        <button class="modal-btn danger" id="modalWipe">Wipe Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
