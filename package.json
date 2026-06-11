@@ -30,6 +30,7 @@
       "scan_cli.py",
       "malware_hashes.json"
     ],
+    "icon": "icon.png",
     "win": {
       "target": [
         {

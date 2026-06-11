@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn, execSync } = require('child_process');
@@ -9,15 +9,31 @@ let monitorInterval = null;
 let watchedDirs = [];
 
 let mainWindow;
+let tray = null;
+
+function createTray() {
+  const iconPath = path.join(__dirname, 'tray-icon.png');
+  if (!fs.existsSync(iconPath)) return;
+  tray = new Tray(nativeImage.createFromPath(iconPath));
+  tray.setToolTip('Sentinel');
+  const ctx = Menu.buildFromTemplate([
+    { label: 'Show Sentinel', click: () => { mainWindow.show(); mainWindow.focus(); } },
+    { type: 'separator' },
+    { label: 'Quit', click: () => { app.isQuitting = true; app.quit(); } },
+  ]);
+  tray.setContextMenu(ctx);
+  tray.on('double-click', () => { mainWindow.show(); mainWindow.focus(); });
+}
 
 const QUARANTINE_DIR = path.join(os.homedir(), 'SentinelQuarantine');
 
 function createWindow() {
   const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
-    width: 960, height: 680,
+    width: 960, height: 680, show: false,
     titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
-    backgroundColor: '#f5f5f7',
+    backgroundColor: '#1c1c1e',
+    icon: path.join(__dirname, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -25,11 +41,15 @@ function createWindow() {
     },
   });
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.on('minimize', (e) => { e.preventDefault(); mainWindow.hide(); });
+  createTray();
 }
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+app.on('before-quit', () => { app.isQuitting = true; });
 
 function send(channel, data) {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -113,17 +133,41 @@ function scanFiles(filePaths) {
   });
 }
 
-function getDrives() {
-  const drives = [];
-  for (let i = 65; i <= 90; i++) {
-    const letter = String.fromCharCode(i);
-    const root = letter + ':\\';
+function getScanTargets() {
+  const targets = [];
+  const homedir = os.homedir();
+  const sysdir = process.env.SYSTEMROOT || 'C:\\Windows';
+  // Common malware locations instead of entire drives
+  const dirs = [
+    sysdir, path.join(sysdir, 'System32'), path.join(sysdir, 'SysWOW64'),
+    path.join(sysdir, 'Temp'), path.join(os.tmpdir()),
+    path.join(homedir, 'AppData', 'Local', 'Temp'),
+    path.join(homedir, 'AppData', 'Local'),
+    path.join(homedir, 'AppData', 'Roaming'),
+    path.join(homedir, 'Downloads'),
+    path.join(homedir, 'Desktop'),
+    process.env.ALLUSERSPROFILE ? path.join(process.env.ALLUSERSPROFILE, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup') : null,
+    path.join(homedir, 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup'),
+  ].filter(Boolean);
+
+  const scanExtensions = new Set(['.exe','.dll','.bat','.cmd','.ps1','.vbs','.js','.scr','.com','.pif','.lnk','.sys','.drv','.ocx','.jar','.zip','.rar','.7z']);
+
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
     try {
-      fs.accessSync(root);
-      drives.push(root);
+      for (const f of fs.readdirSync(dir)) {
+        const full = path.join(dir, f);
+        try {
+          if (fs.statSync(full).isFile()) {
+            const ext = path.extname(f).toLowerCase();
+            if (scanExtensions.has(ext)) targets.push(full);
+            if (targets.length >= 5000) return targets; // cap for performance
+          }
+        } catch {}
+      }
     } catch {}
   }
-  return drives;
+  return targets;
 }
 
 fs.mkdirSync(QUARANTINE_DIR, { recursive: true });
@@ -146,8 +190,9 @@ ipcMain.handle('scan-files', async (_, filePaths) => {
 
 ipcMain.handle('full-scan', async () => {
   try {
-    const drives = getDrives();
-    const results = await scanFiles(drives);
+    const targets = getScanTargets();
+    if (targets.length === 0) return { success: true, results: [] };
+    const results = await scanFiles(targets);
     return { success: true, results };
   } catch (e) {
     return { success: false, error: e.message };
