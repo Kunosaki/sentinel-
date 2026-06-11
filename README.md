@@ -2,7 +2,7 @@
 
 A beautiful Apple-inspired virus scanner for Windows. Full system scan, quarantine, and secure file wiping.
 
-![Sentinel](screenshot.png)
+![Sentinel](screenshot.svg)
 
 ## Features
 
